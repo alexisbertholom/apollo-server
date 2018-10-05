@@ -33,6 +33,8 @@ import {
   SyntaxError,
 } from 'apollo-server-errors';
 
+import { TRootValueResolver } from './graphQLOptions';
+
 export interface GraphQLResponse {
   data?: object;
   errors?: Array<GraphQLError & object>;
@@ -50,7 +52,7 @@ export interface QueryOptions {
   // a mutation), throw this error.
   nonQueryError?: Error;
 
-  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
+  rootValue?: TRootValueResolver<any>;
   context?: any;
   variables?: { [key: string]: any };
   operationName?: string;
@@ -224,7 +226,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           document: documentAST,
           rootValue:
             typeof options.rootValue === 'function'
-              ? options.rootValue(documentAST)
+              ? await options.rootValue(documentAST, options)
               : options.rootValue,
           contextValue: context,
           variableValues: options.variables,

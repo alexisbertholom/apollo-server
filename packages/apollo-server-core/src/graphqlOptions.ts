@@ -8,13 +8,18 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
+import { QueryOptions } from './runQuery';
+
+export type TRootValueResolver<T> =
+  | ((parsedQuery: DocumentNode, options: QueryOptions) => Promise<T> | T)
+  | T;
 
 /*
  * GraphQLServerOptions
  *
  * - schema: an executable GraphQL schema used to fulfill requests.
  * - (optional) formatError: Formatting function applied to all errors before response is sent
- * - (optional) rootValue: rootValue passed to GraphQL execution, or a function to resolving the rootValue from the DocumentNode
+ * - (optional) rootValue: rootValue passed to GraphQL execution, or a function to resolving the rootValue from the DocumentNode and QueryOptions
  * - (optional) context: the context passed to GraphQL execution
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
@@ -27,7 +32,7 @@ export interface GraphQLServerOptions<
   TContext =
     | (() => Promise<Record<string, any>> | Record<string, any>)
     | Record<string, any>,
-  TRootVal = ((parsedQuery: DocumentNode) => any) | any
+  TRootVal = TRootValueResolver<any>
 > {
   schema: GraphQLSchema;
   formatError?: Function;

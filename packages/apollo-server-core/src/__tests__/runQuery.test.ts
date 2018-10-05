@@ -11,7 +11,7 @@ import {
   DocumentNode,
 } from 'graphql';
 
-import { runQuery } from '../runQuery';
+import { runQuery, QueryOptions } from '../runQuery';
 
 import { GraphQLExtensionStack, GraphQLExtension } from 'graphql-extensions';
 
@@ -178,13 +178,20 @@ describe('runQuery', () => {
 
   it('correctly evaluates a rootValue function', () => {
     const query = `{ testRootValue }`;
-    const expected = { testRootValue: 'it also works' };
+    const prefix = '[] ';
+    const expected = { testRootValue: prefix + 'it also works' };
+    const context = { prefix };
     return runQuery({
       schema,
       queryString: query,
-      rootValue: (doc: DocumentNode) => {
+      context,
+      rootValue: (doc: DocumentNode, options: QueryOptions) => {
         expect(doc.kind).toEqual('Document');
-        return 'it also';
+        expect(options).not.toBeUndefined();
+        expect(options.queryString).toBe(query);
+        expect(options.context).toBe(context);
+        expect(options.context.prefix).toBe(prefix);
+        return options.context.prefix + 'it also';
       },
       request: new MockReq(),
     }).then(res => {
